@@ -25,9 +25,24 @@ class Car(Model):
 
 
 # Serializers are responsible for serializing some model class:
-class Serializer(object):
+class MappedSerializerClass(type):
+    serializer_class_map = {}
+
     class Meta:
         model_class = None
+
+    def __init__(cls, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        model_class = cls.Meta.model_class
+        if model_class:
+            MappedSerializerClass.serializer_class_map[model_class] = cls
+
+
+def get_serializer_class(model):
+    return MappedSerializerClass.serializer_class_map[type(model)]
+
+
+class Serializer(object, metaclass=MappedSerializerClass):
 
     def __init__(self, model=None) -> None:
         super().__init__()
@@ -50,6 +65,8 @@ class ModelSerializer(Serializer):
 
 
 class VehicleSerializer(ModelSerializer):
+    class Meta:
+        model_class = None
 
     def serialize(self):
         return {**super().serialize(), 'travels_on': self.model.travels_on}
@@ -80,11 +97,6 @@ serialized_models_in = {'vanilla1': {'class': Model},
                         'ship1': {'class': Ship},
                         'car1': {'class': Car}}
 
-serializer_class_map = {Model: ModelSerializer,
-                        Building: BuildingSerializer,
-                        Car: CarSerializer,
-                        Ship: ShipSerializer}
-
 
 def make_model(name, spec):
     model_class = spec.pop('class')
@@ -92,10 +104,6 @@ def make_model(name, spec):
 
 
 models = {name: make_model(name, spec) for name, spec in serialized_models_in.items()}
-
-
-def get_serializer_class(model):
-    return serializer_class_map[type(model)]
 
 
 serialized_models_out = {name: get_serializer_class(model)(model).serialize() for name, model in models.items()}
