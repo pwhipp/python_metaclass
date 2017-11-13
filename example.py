@@ -42,7 +42,7 @@ class Serializer(object):
 
 
 class ModelSerializer(Serializer):
-    class Meta(Serializer.Meta):
+    class Meta:
         model_class = Model
 
     def serialize(self):
@@ -50,25 +50,23 @@ class ModelSerializer(Serializer):
 
 
 class VehicleSerializer(ModelSerializer):
-    class Meta(ModelSerializer.Meta):
-        pass
 
     def serialize(self):
         return {**super().serialize(), 'travels_on': self.model.travels_on}
 
 
 class ShipSerializer(VehicleSerializer):
-    class Meta(VehicleSerializer):
+    class Meta:
         model_class = Ship
 
 
 class CarSerializer(VehicleSerializer):
-    class Meta(VehicleSerializer):
+    class Meta:
         model_class = Car
 
 
 class BuildingSerializer(ModelSerializer):
-    class Meta(ModelSerializer.Meta):
+    class Meta:
         model_class = Building
 
     def serialize(self):
